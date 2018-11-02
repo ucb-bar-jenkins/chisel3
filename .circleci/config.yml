@@ -44,21 +44,6 @@ commands:
       # We currently run them separately so we can run them in parallel.
       - run:
           command: |
-            (cd chisel3 && cat /dev/null | sbt $SBT_ARGS -DminimalResources << parameters.scalaVersion:
-        type: string
-        default: ""
-    steps:
-      - attach_workspace:
-          at: /home/chisel
-
-      # Set environment
-      - run: echo 'export PATH="/opt/verilator/verilator_3_922/bin:/opt/yosys/bin:$PATH"' >> $BASH_ENV
-
-      # The -DminimalResources flag causes sbt to run tests sequentially,
-      #  so we could actually use "sbt +test" to run all the crossVersioned tests.
-      # We currently run them separately so we can run them in parallel.
-      - run:
-          command: |
             (cd chisel3 && cat /dev/null | sbt $SBT_ARGS -DminimalResources << parameters.scalaVersion >> test)
 
 jobs:
