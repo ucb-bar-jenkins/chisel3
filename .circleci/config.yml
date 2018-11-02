@@ -5,28 +5,65 @@
 
 version: 2.1
 
-# Use the chisel3-tools image to build and run FIRRTL and chisel tests.
-defaultImageUserWDEnv: &defaultImageUserWDEnv
-  docker:
-    - image: ucbbar/chisel3-tools
-      user: "chisel"
+executors:
+  chisel-executor:
+    # Use the chisel3-tools image to build and run FIRRTL and chisel tests.
+    docker:
+      - image: ucbbar/chisel3-tools
+        user: "chisel"
 
-  working_directory: ~/repo
+    working_directory: ~/repo
 
-  environment:
-    # Customize the JVM maximum heap limit
-    JVM_OPTS: -Xmx3200m
-    TERM: dumb
-    CHISEL_REV: origin/master
-    FIRRTL_REPO: git@github.com:freechipsproject/firrtl.git
-    FIRRTL_BRANCH: master
-    FIRRTL_REV: master
-    CHECKSTYLE_LIMIT: 40
-    SBT_ARGS: ""
+    environment:
+      # Customize the JVM maximum heap limit
+      JVM_OPTS: -Xmx3200m
+      TERM: dumb
+      CHISEL_REV: origin/master
+      FIRRTL_REPO: git@github.com:freechipsproject/firrtl.git
+      FIRRTL_BRANCH: master
+      FIRRTL_REV: master
+      CHECKSTYLE_LIMIT: 40
+      SBT_ARGS: ""
+
+commands:
+  test-chisel:
+    description: "Run chisel tests with a specific Scala version"
+    parameters:
+      scalaVersion:
+        type: string
+        default: ""
+    steps:
+      - attach_workspace:
+          at: /home/chisel
+
+      # Set environment
+      - run: echo 'export PATH="/opt/verilator/verilator_3_922/bin:/opt/yosys/bin:$PATH"' >> $BASH_ENV
+
+      # The -DminimalResources flag causes sbt to run tests sequentially,
+      #  so we could actually use "sbt +test" to run all the crossVersioned tests.
+      # We currently run them separately so we can run them in parallel.
+      - run:
+          command: |
+            (cd chisel3 && cat /dev/null | sbt $SBT_ARGS -DminimalResources << parameters.scalaVersion:
+        type: string
+        default: ""
+    steps:
+      - attach_workspace:
+          at: /home/chisel
+
+      # Set environment
+      - run: echo 'export PATH="/opt/verilator/verilator_3_922/bin:/opt/yosys/bin:$PATH"' >> $BASH_ENV
+
+      # The -DminimalResources flag causes sbt to run tests sequentially,
+      #  so we could actually use "sbt +test" to run all the crossVersioned tests.
+      # We currently run them separately so we can run them in parallel.
+      - run:
+          command: |
+            (cd chisel3 && cat /dev/null | sbt $SBT_ARGS -DminimalResources << parameters.scalaVersion >> test)
 
 jobs:
   build-prep:
-    <<: *defaultImageUserWDEnv
+    executor: chisel-executor
 
     steps:
 
@@ -52,7 +89,7 @@ jobs:
             - .sbt
 
   build-firrtl:
-    <<: *defaultImageUserWDEnv
+    executor: chisel-executor
 
     steps:
       - attach_workspace:
@@ -75,7 +112,7 @@ jobs:
   # Define a pure build chisel - currently unused since we can compile and test chisel in one step
   #  and we don't have downstream jobs that need the published version of chisel.
   build-chisel:
-    <<: *defaultImageUserWDEnv
+    executor: chisel-executor
 
     steps:
       - attach_workspace:
@@ -93,42 +130,19 @@ jobs:
             - .sbt
 
   test-chisel-2_11:
-    <<: *defaultImageUserWDEnv
-
+    executor: chisel-executor
     steps:
-      - attach_workspace:
-          at: /home/chisel
-
-      # Set environment
-      - run: echo 'export PATH="/opt/verilator/verilator_3_922/bin:/opt/yosys/bin:$PATH"' >> $BASH_ENV
-
-      # The -DminimalResources flag causes sbt to run tests sequentially,
-      #  so we could actually use "sbt +test" to run all the crossVersioned tests.
-      # We currently run them separately so we can run them in parallel.
-      - run:
-          command: |
-            (cd chisel3 && cat /dev/null | sbt $SBT_ARGS -DminimalResources "++2.11.12" test)
+      - test-chisel:
+          scalaVersion: "++2.11.12"
 
   test-chisel-2_12:
-    <<: *defaultImageUserWDEnv
-
+    executor: chisel-executor
     steps:
-      - attach_workspace:
-          at: /home/chisel
-
-      # Set environment
-      - run: echo 'export PATH="/opt/verilator/verilator_3_922/bin:/opt/yosys/bin:$PATH"' >> $BASH_ENV
-
-      # The -DminimalResources flag causes sbt to run tests sequentially,
-      #  so we could actually use "sbt +test" to run all the crossVersioned tests.
-      # We currently run them separately so we can run them in parallel.
-      - run:
-          command: |
-            (cd chisel3 && cat /dev/null | sbt $SBT_ARGS -DminimalResources "++2.12.6" test)
+      - test-chisel:
+          scalaVersion: "++2.12.6"
 
   checkstyle-chisel:
-    <<: *defaultImageUserWDEnv
-
+    executor: chisel-executor
     steps:
       - attach_workspace:
           at: /home/chisel
