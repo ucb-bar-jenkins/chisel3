@@ -1,7 +1,10 @@
-# Scala CircleCI 2.0 configuration file
+# Scala CircleCI 2.1 configuration file
 #
 # Check https://circleci.com/docs/2.0/sample-config/ for more details
 #
+
+version: 2.1
+
 # Use the chisel3-tools image to build and run FIRRTL and chisel tests.
 defaultImageUserWDEnv: &defaultImageUserWDEnv
   docker:
@@ -20,9 +23,6 @@ defaultImageUserWDEnv: &defaultImageUserWDEnv
     FIRRTL_REV: master
     CHECKSTYLE_LIMIT: 40
     SBT_ARGS: ""
-
-
-version: 2
 
 jobs:
   build-prep:
