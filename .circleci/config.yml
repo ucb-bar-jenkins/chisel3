@@ -92,7 +92,7 @@ jobs:
             - .m2
             - .sbt
 
-  test-chisel-2.11:
+  test-chisel-2_11:
     <<: *defaultImageUserWDEnv
 
     steps:
@@ -109,7 +109,7 @@ jobs:
           command: |
             (cd chisel3 && cat /dev/null | sbt $SBT_ARGS -DminimalResources "++2.11.12" test)
 
-  test-chisel-2.12:
+  test-chisel-2_12:
     <<: *defaultImageUserWDEnv
 
     steps:
@@ -146,10 +146,10 @@ workflows:
       - build-firrtl:
           requires:
             - build-prep
-      - test-chisel-2.11:
+      - test-chisel-2_11:
           requires:
             - build-firrtl
-      - test-chisel-2.12:
+      - test-chisel-2_12:
           requires:
             - build-firrtl
       - checkstyle-chisel:
@@ -159,4 +159,4 @@ workflows:
           # If we make it dependent on at least one of the tests,
           #  there's a better chance to see if the tests fail before we flag a style failure
           requires:
-            - test-chisel-2.12
+            - test-chisel-2_12
