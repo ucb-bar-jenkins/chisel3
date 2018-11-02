@@ -101,11 +101,16 @@ lazy val chiselSettings = Seq (
 
   // Tests from other projects may still run concurrently
   //  if we're not running with -DminimalResources.
-//  parallelExecution in Test := !sys.props.contains("minimalResources"),
-//  parallelExecution in ThisBuild := false,
-//  concurrentRestrictions in Global += Tags.limit(Tags.Test, 1),
-//  Test / parallelExecution := false,
-  Test / parallelExecution := !sys.props.contains("minimalResources"),
+  // Another option would be to experiment with:
+  concurrentRestrictions in Global += {
+    val testTasks = if (sys.props.contains("minimalResources")) {
+      2
+    } else {
+      java.lang.Runtime.getRuntime.availableProcessors
+    }
+    Tags.limit(Tags.Test, testTasks)
+  },
+//  Test / parallelExecution := !sys.props.contains("minimalResources"),
 
   javacOptions ++= javacOptionsVersion(scalaVersion.value)
 )
